@@ -12,15 +12,6 @@
 #import "OSSCancellationTokenRegistration.h"
 #import "OSSCancellationTokenSource.h"
 #import "OSSExecutor.h"
+#import "OSSGeneric.h"
 #import "OSSTask.h"
 #import "OSSTaskCompletionSource.h"
-
-
-NS_ASSUME_NONNULL_BEGIN
-
-/**
- A string containing the version of the Bolts Framework used by the current application.
- */
-extern NSString *const OSSBoltsFrameworkVersionString;
-
-NS_ASSUME_NONNULL_END

@@ -242,13 +242,11 @@
         if (task.cancelled) {
             onComplete(NO, [NSError errorWithDomain:OSSClientErrorDomain
                                                code:OSSClientErrorCodeTaskCancelled
-                                           userInfo:@{OSSErrorMessageTOKEN: @"This task is cancelled"}]);
-        } else if (task.error) {
-            onComplete(NO, task.error);
+                                           userInfo:@{OSSErrorMessageTOKEN: @"This task is cancelled!"}]);
         } else if (task.faulted) {
             onComplete(NO, [NSError errorWithDomain:OSSClientErrorDomain
                                                code:OSSClientErrorCodeExcpetionCatched
-                                           userInfo:@{OSSErrorMessageTOKEN: [NSString stringWithFormat:@"Catch exception - %@", task.exception]}]);
+                                           userInfo:@{OSSErrorMessageTOKEN: task.error.description}]);
         } else {
             onComplete(YES, nil);
         }

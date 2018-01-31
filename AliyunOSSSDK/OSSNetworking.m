@@ -570,15 +570,26 @@
       
         return task;
     }] continueWithBlock:^id(OSSTask *task) {
-
         // if error occurs before created sessionTask
-        if (task.error) {
-            requestDelegate.completionHandler(nil, task.error);
+        NSError *error;
+        if (task.isCancelled) {
+            error = [NSError errorWithDomain:OSSClientErrorDomain
+                                                 code:OSSClientErrorCodeExcpetionCatched
+                                             userInfo:@{OSSErrorMessageTOKEN: @"This task is cancelled!"}];
+            
+            
         } else if (task.isFaulted) {
-            requestDelegate.completionHandler(nil, [NSError errorWithDomain:OSSClientErrorDomain
-                                                                       code:OSSClientErrorCodeExcpetionCatched
-                                                                   userInfo:@{OSSErrorMessageTOKEN: [NSString stringWithFormat:@"Catch exception - %@", task.exception]}]);
+            error = [NSError errorWithDomain:OSSClientErrorDomain
+                                                 code:OSSClientErrorCodeExcpetionCatched
+                                             userInfo:@{OSSErrorMessageTOKEN: task.error.description}];
         }
+        
+        if (error != nil)
+        {
+            requestDelegate.completionHandler(nil, error);
+        }
+        
+        
         return nil;
     }];
 }

@@ -9,7 +9,6 @@
  */
 
 #import "OSSTask.h"
-#import "OSSLog.h"
 
 #import <libkern/OSAtomic.h>
 
@@ -19,20 +18,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 __attribute__ ((noinline)) void ossWarnBlockingOperationOnMainThread() {
     NSLog(@"Warning: A long-running operation is being executed on the main thread. \n"
-          " Break on warnBlockingOperationOnMainThread() to debug.");
+          " Break on ossWarnBlockingOperationOnMainThread() to debug.");
 }
 
-NSString *const OSSTaskErrorDomain = @"bolts";
+NSString *const OSSTaskErrorDomain = @"oss-bolts";
 NSInteger const kOSSMultipleErrorsError = 80175001;
-NSString *const OSSTaskMultipleExceptionsException = @"OSSMultipleExceptionsException";
 
-NSString *const OSSTaskMultipleErrorsUserInfoKey = @"errors";
-NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
+NSString *const OSSTaskMultipleErrorsUserInfoKey = @"oss-errors";
 
 @interface OSSTask () {
     id _result;
     NSError *_error;
-    NSException *_exception;
 }
 
 @property (nonatomic, assign, readwrite, getter=isCancelled) BOOL cancelled;
@@ -60,11 +56,12 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
     return self;
 }
 
-- (instancetype)initWithResult:(id)result {
+- (instancetype)initWithResult:(nullable id)result {
     self = [super init];
-    if (self) {
-        [self trySetResult:result];
-    }
+    if (!self) return self;
+
+    [self trySetResult:result];
+
     return self;
 }
 
@@ -73,15 +70,6 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
     if (!self) return self;
 
     [self trySetError:error];
-
-    return self;
-}
-
-- (instancetype)initWithException:(NSException *)exception {
-    self = [super init];
-    if (!self) return self;
-
-    [self trySetException:exception];
 
     return self;
 }
@@ -97,16 +85,12 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
 
 #pragma mark - Task Class methods
 
-+ (instancetype)taskWithResult:(_Nullable id)result {
++ (instancetype)taskWithResult:(nullable id)result {
     return [[self alloc] initWithResult:result];
 }
 
 + (instancetype)taskWithError:(NSError *)error {
     return [[self alloc] initWithError:error];
-}
-
-+ (instancetype)taskWithException:(NSException *)exception {
-    return [[self alloc] initWithException:exception];
 }
 
 + (instancetype)cancelledTask {
@@ -122,35 +106,20 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
     __block int32_t cancelled = 0;
     NSObject *lock = [[NSObject alloc] init];
     NSMutableArray *errors = [NSMutableArray array];
-    NSMutableArray *exceptions = [NSMutableArray array];
 
     OSSTaskCompletionSource *tcs = [OSSTaskCompletionSource taskCompletionSource];
     for (OSSTask *task in tasks) {
-        [task continueWithBlock:^id(OSSTask *task) {
-            if (task.exception) {
+        [task continueWithBlock:^id(OSSTask *t) {
+            if (t.error) {
                 @synchronized (lock) {
-                    [exceptions addObject:task.exception];
+                    [errors addObject:t.error];
                 }
-            } else if (task.error) {
-                @synchronized (lock) {
-                    [errors addObject:task.error];
-                }
-            } else if (task.cancelled) {
+            } else if (t.cancelled) {
                 OSAtomicIncrement32Barrier(&cancelled);
             }
 
             if (OSAtomicDecrement32Barrier(&total) == 0) {
-                if (exceptions.count > 0) {
-                    if (exceptions.count == 1) {
-                        tcs.exception = [exceptions firstObject];
-                    } else {
-                        NSException *exception =
-                        [NSException exceptionWithName:OSSTaskMultipleExceptionsException
-                                                reason:@"There were multiple exceptions."
-                                              userInfo:@{ OSSTaskMultipleExceptionsUserInfoKey: exceptions }];
-                        tcs.exception = exception;
-                    }
-                } else if (errors.count > 0) {
+                if (errors.count > 0) {
                     if (errors.count == 1) {
                         tcs.error = [errors firstObject];
                     } else {
@@ -172,7 +141,7 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
 }
 
 + (instancetype)taskForCompletionOfAllTasksWithResults:(nullable NSArray<OSSTask *> *)tasks {
-    return [[self taskForCompletionOfAllTasks:tasks] continueWithSuccessBlock:^id(OSSTask *task) {
+    return [[self taskForCompletionOfAllTasks:tasks] continueWithSuccessBlock:^id(OSSTask * __unused task) {
         return [tasks valueForKey:@"result"];
     }];
 }
@@ -189,24 +158,19 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
     
     NSObject *lock = [NSObject new];
     NSMutableArray<NSError *> *errors = [NSMutableArray new];
-    NSMutableArray<NSException *> *exceptions = [NSMutableArray new];
     
     OSSTaskCompletionSource *source = [OSSTaskCompletionSource taskCompletionSource];
     for (OSSTask *task in tasks) {
-        [task continueWithBlock:^id(OSSTask *task) {
-            if (task.exception != nil) {
+        [task continueWithBlock:^id(OSSTask *t) {
+            if (t.error != nil) {
                 @synchronized(lock) {
-                    [exceptions addObject:task.exception];
+                    [errors addObject:t.error];
                 }
-            } else if (task.error != nil) {
-                @synchronized(lock) {
-                    [errors addObject:task.error];
-                }
-            } else if (task.cancelled) {
+            } else if (t.cancelled) {
                 OSAtomicIncrement32Barrier(&cancelled);
             } else {
                 if(OSAtomicCompareAndSwap32Barrier(0, 1, &completed)) {
-                    [source setResult:task.result];
+                    [source setResult:t.result];
                 }
             }
             
@@ -214,16 +178,6 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
                 OSAtomicCompareAndSwap32Barrier(0, 1, &completed)) {
                 if (cancelled > 0) {
                     [source cancel];
-                } else if (exceptions.count > 0) {
-                    if (exceptions.count == 1) {
-                        source.exception = exceptions.firstObject;
-                    } else {
-                        NSException *exception =
-                        [NSException exceptionWithName:OSSTaskMultipleExceptionsException
-                                                reason:@"There were multiple exceptions."
-                                              userInfo:@{ @"exceptions": exceptions }];
-                        source.exception = exception;
-                    }
                 } else if (errors.count > 0) {
                     if (errors.count == 1) {
                         source.error = errors.firstObject;
@@ -243,7 +197,7 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
 }
 
 
-+ (instancetype)taskWithDelay:(int)millis {
++ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis {
     OSSTaskCompletionSource *tcs = [OSSTaskCompletionSource taskCompletionSource];
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, millis * NSEC_PER_MSEC);
     dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
@@ -252,7 +206,7 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
     return tcs.task;
 }
 
-+ (instancetype)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token {
++ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token {
     if (token.cancellationRequested) {
         return [OSSTask cancelledTask];
     }
@@ -309,25 +263,6 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
         self.completed = YES;
         self.faulted = YES;
         _error = error;
-        [self runContinuations];
-        return YES;
-    }
-}
-
-- (nullable NSException *)exception {
-    @synchronized(self.lock) {
-        return _exception;
-    }
-}
-
-- (BOOL)trySetException:(NSException *)exception {
-    @synchronized(self.lock) {
-        if (self.completed) {
-            return NO;
-        }
-        self.completed = YES;
-        self.faulted = YES;
-        _exception = exception;
         [self runContinuations];
         return YES;
     }
@@ -393,23 +328,12 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
             return;
         }
 
-        id result = nil;
-        @try {
-            result = block(self);
-        } @catch (NSException *exception) {
-            tcs.exception = exception;
-            OSSLogError(@"exception name: %@",[exception name]);
-            OSSLogError(@"exception reason: %@",[exception reason]);
-            return;
-        }
-
+        id result = block(self);
         if ([result isKindOfClass:[OSSTask class]]) {
 
             id (^setupWithTask) (OSSTask *) = ^id(OSSTask *task) {
                 if (cancellationToken.cancellationRequested || task.cancelled) {
                     [tcs cancel];
-                } else if (task.exception) {
-                    tcs.exception = task.exception;
                 } else if (task.error) {
                     tcs.error = task.error;
                 } else {
@@ -501,7 +425,9 @@ NSString *const OSSTaskMultipleExceptionsUserInfoKey = @"exceptions";
         }
         [self.condition lock];
     }
-    while (!self.completed) {
+    // TODO: (nlutsenko) Restructure this to use Bolts-Swift thread access synchronization architecture
+    // In the meantime, it's absolutely safe to get `_completed` aka an ivar, as long as it's a `BOOL` aka less than word size.
+    while (!_completed) {
         [self.condition wait];
     }
     [self.condition unlock];
