@@ -110,6 +110,17 @@ int32_t const CHUNK_SIZE = 8 * 1024;
     return [body dataUsingEncoding:NSUTF8StringEncoding];
 }
 
++ (NSData *)constructHttpBodyForDeleteMultipleObjects:(NSArray<NSString *> *)keys quiet:(BOOL)quiet {
+    NSMutableString * body = [NSMutableString stringWithString:@"<Delete>\n"];
+    [body appendFormat:@"<Quiet>%@</Quiet>\n",quiet?@"true":@"false"];
+    [keys enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL *stop) {
+        [body appendFormat:@"<Object>\n<Key>%@</Key>\n</Object>\n", key];
+    }];
+    [body appendString:@"</Delete>\n"];
+    OSSLogVerbose(@"constucted delete multiple objects body:\n%@", body);
+    return [body dataUsingEncoding:NSUTF8StringEncoding];
+}
+
 + (NSData *)constructHttpBodyForCreateBucketWithLocation:(NSString *)location {
     NSString * body = [NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                        @"<CreateBucketConfiguration>\n"
@@ -269,7 +280,7 @@ int32_t const CHUNK_SIZE = 8 * 1024;
         return nil;
     }
     NSData * data = [NSData dataWithBytes:input length:length];
-    return [data base64EncodedStringWithOptions:0];
+    return [data base64EncodedStringWithOptions: NSDataBase64Encoding64CharacterLineLength];
 }
 
 + (BOOL)isSubresource:(NSString *)param {
@@ -1176,6 +1187,25 @@ int32_t const CHUNK_SIZE = 8 * 1024;
     }
     
     return result;
+}
+
++ (NSData *)constructHttpBodyForTriggerCallback:(NSString *)callbackParams callbackVaribles:(NSString *)callbackVaribles
+{
+    NSMutableString *bodyString = [NSMutableString string];
+    
+    [bodyString appendString:@"x-oss-process=trigger/callback,callback_"];
+    if ([callbackParams oss_isNotEmpty])
+    {
+        [bodyString appendString:callbackParams];
+    }
+    
+    [bodyString appendString:@",callback-var_"];
+    if ([callbackVaribles oss_isNotEmpty])
+    {
+        [bodyString appendString:callbackVaribles];
+    }
+    
+    return [bodyString dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 @end

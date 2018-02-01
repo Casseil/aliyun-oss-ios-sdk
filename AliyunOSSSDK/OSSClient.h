@@ -14,9 +14,11 @@
 @class OSSGetBucketRequest;
 @class OSSGetBucketACLRequest;
 @class OSSGetObjectRequest;
+@class OSSGetObjectACLRequest;
 @class OSSPutObjectRequest;
 @class OSSPutObjectACLRequest;
 @class OSSDeleteObjectRequest;
+@class OSSDeleteMultipleObjectsRequest;
 @class OSSCopyObjectRequest;
 @class OSSInitMultipartUploadRequest;
 @class OSSUploadPartRequest;
@@ -28,6 +30,7 @@
 @class OSSMultipartUploadRequest;
 @class OSSTask;
 @class OSSExecutor;
+@class OSSCallBackRequest;
 
 @class OSSNetworking;
 @class OSSClientConfiguration;
@@ -138,6 +141,17 @@ The corresponding RESTFul API: GetObject
 - (OSSTask *)getObject:(OSSGetObjectRequest *)request;
 
 /**
+ * Gets the Access Control List (ACL) of the OSS object.
+ *
+ * @param bucketName
+ *            Bucket name.
+ * @param key
+ *            Object Key.
+ * @return The OSSTask with result of objectAcls instance of the object.
+ */
+- (OSSTask *)getObjectACL:(OSSGetObjectACLRequest *)request;
+
+/**
 The corresponding RESTFul API: PutObject
  Uploads a file.
  */
@@ -174,8 +188,21 @@ The corresponding RESTFul API: copyObject
 - (OSSTask *)copyObject:(OSSCopyObjectRequest *)request;
 
 /**
-The corresponding RESTFul API: DeleteObject
-Deletes an object
+ * Batch deletes the specified files under a specific bucket. If the files
+ * are non-exist, the operation will still return successful.
+ *
+ * @param deleteObjectsRequest
+ *            A OSSDeleteMultipleObjectsRequest instance which specifies the
+ *            bucket and file keys to delete.
+ * @return A OSSTask with result of OSSDeleteMultipleObjectsResult instance which specifies each
+ *         file's result in normal mode or only failed deletions in quite
+ *         mode. By default it's quite mode.
+ */
+- (OSSTask *)deleteMultipleObjects:(OSSDeleteMultipleObjectsRequest *)request;
+
+/**
+ The corresponding RESTFul API: DeleteObject
+ Deletes an object
  */
 - (OSSTask *)deleteObject:(OSSDeleteObjectRequest *)request;
 
@@ -220,6 +247,8 @@ Aborts the multipart upload by the specified upload Id.
 - (OSSTask *)abortMultipartUpload:(OSSAbortMultipartUploadRequest *)request;
 
 - (OSSTask *)abortResumableMultipartUpload:(OSSResumableUploadRequest *)request;
+
+- (OSSTask *)triggerCallBack:(OSSCallBackRequest *)request;
 
 #pragma mark extention method
 
