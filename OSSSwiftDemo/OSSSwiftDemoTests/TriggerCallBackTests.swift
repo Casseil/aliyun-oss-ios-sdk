@@ -37,7 +37,7 @@ class TriggerCallBackTests: OSSSwiftDemoTests {
                                  "callbackBody": "test"]
         
         let task = client.triggerCallBack(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -52,7 +52,7 @@ class TriggerCallBackTests: OSSSwiftDemoTests {
                                "key2": "value2"]
         
         let task = client.triggerCallBack(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             
             return nil
@@ -67,7 +67,7 @@ class TriggerCallBackTests: OSSSwiftDemoTests {
                                  "callbackBody": "test"]
         
         let task = client.triggerCallBack(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil

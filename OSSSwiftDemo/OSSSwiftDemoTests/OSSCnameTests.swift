@@ -41,7 +41,7 @@ class OSSCnameTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -56,7 +56,7 @@ class OSSCnameTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -77,7 +77,7 @@ class OSSCnameTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()

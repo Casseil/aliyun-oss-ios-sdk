@@ -11,7 +11,6 @@
 #import <Foundation/Foundation.h>
 
 #import "OSSCancellationToken.h"
-#import "OSSGeneric.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -91,7 +90,7 @@ typedef __nullable id(^OSSContinuationBlock)(OSSTask<ResultType> *t);
  @param millis The approximate number of milliseconds to wait before the
  task will be finished (with result == nil).
  */
-+ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis;
++ (instancetype)taskWithDelay:(int)millis NS_SWIFT_NAME(init(delay:));
 
 /*!
  Returns a task that will be completed a certain amount of time in the future.
@@ -99,7 +98,7 @@ typedef __nullable id(^OSSContinuationBlock)(OSSTask<ResultType> *t);
  task will be finished (with result == nil).
  @param token The cancellation token (optional).
  */
-+ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token;
++ (instancetype)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token;
 
 /*!
  Returns a task that will be completed after the given block completes with

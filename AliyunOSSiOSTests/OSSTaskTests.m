@@ -700,30 +700,6 @@
     XCTAssertEqualObjects(taskCompletionSource.task.error, error);
 }
 
-- (void)testSetException {
-    OSSTaskCompletionSource *taskCompletionSource = [OSSTaskCompletionSource taskCompletionSource];
-    
-    NSException *exception = [NSException exceptionWithName:@"testExceptionName" reason:@"testExceptionReason" userInfo:nil];
-    taskCompletionSource.exception = exception;
-    XCTAssertThrowsSpecificNamed([taskCompletionSource setException:exception], NSException, NSInternalInconsistencyException);
-    
-    XCTAssertTrue(taskCompletionSource.task.completed);
-    XCTAssertTrue(taskCompletionSource.task.faulted);
-    XCTAssertEqualObjects(taskCompletionSource.task.exception, exception);
-}
-
-- (void)testTrySetException {
-    OSSTaskCompletionSource *taskCompletionSource = [OSSTaskCompletionSource taskCompletionSource];
-    
-    NSException *exception = [NSException exceptionWithName:@"testExceptionName" reason:@"testExceptionReason" userInfo:nil];
-    [taskCompletionSource trySetException:exception];
-    [taskCompletionSource trySetException:exception];
-    
-    XCTAssertTrue(taskCompletionSource.task.completed);
-    XCTAssertTrue(taskCompletionSource.task.faulted);
-    XCTAssertEqualObjects(taskCompletionSource.task.exception, exception);
-}
-
 - (void)testSetCancelled {
     OSSTaskCompletionSource *taskCompletionSource = [OSSTaskCompletionSource taskCompletionSource];
     

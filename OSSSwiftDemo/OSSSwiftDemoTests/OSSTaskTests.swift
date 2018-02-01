@@ -23,19 +23,20 @@ class OSSTaskTests: OSSSwiftDemoTests {
     }
     
     func testBasicOnSuccess() {
-        OSSTask<AnyObject>.init(result: "foo" as AnyObject).continue(successBlock: { (t) -> Any? in
+        OSSTask<AnyObject>.init(result: "foo" as AnyObject).continueOnSuccessWith(block: { (t) -> Any? in
             XCTAssertEqual("foo", t.result as! String)
+            
             return nil
         }).waitUntilFinished()
     }
     
     func testBasicOnSuccessWithExecutor() {
         var completed = false
-        let task = (OSSTask<AnyObject>.init(delay: 100)).continue(with: OSSExecutor.immediate(), withSuccessBlock: { (t) -> Any? in
+        let task = (OSSTask<AnyObject>.init(delay: 100)).continueOnSuccessWith(executor: OSSExecutor.immediate()) { (t) -> Any? in
             completed = true
             
             return nil
-        })
+        }
         task.waitUntilFinished()
         XCTAssertTrue(completed)
         XCTAssertTrue(task.isCompleted)
@@ -47,8 +48,9 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testBasicOnSuccessWithToken() {
         let cts = OSSCancellationTokenSource()
         var task = OSSTask<AnyObject>.init(delay: 100)
-        task = task.continue(successBlock: { (t) -> Any? in
+        task = task.continueOnSuccessWith(block: { (t) -> Any? in
             XCTFail("Success block should not be triggered")
+            
             return nil
         }, cancellationToken: cts.token)
         
@@ -61,12 +63,12 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testBasicOnSuccessWithExecutorToken() {
         let cts = OSSCancellationTokenSource()
         var task = OSSTask<AnyObject>.init(delay: 100)
-        task = task.continue(with: OSSExecutor.immediate(),
-                             successBlock: { (t) -> Any? in
-                                XCTFail("Success block should not be triggered")
-                                
-                                return nil
+        task = task.continueOnSuccessWith(executor: OSSExecutor.immediate(), block: { (t) -> Any? in
+            XCTFail("Success block should not be triggered")
+            
+            return nil
         }, cancellationToken: cts.token)
+        
         cts.cancel()
         task.waitUntilFinished()
         
@@ -78,18 +80,18 @@ class OSSTaskTests: OSSSwiftDemoTests {
         var task = OSSTask<AnyObject>.init(result: nil)
         cts.cancel()
         
-        task = task .continue(with: OSSExecutor.immediate(),
-                              successBlock: { (t) -> Any? in
-                                XCTFail("Success block should not be triggered")
-                                
-                                return nil
+        task = task .continueOnSuccessWith(executor: OSSExecutor.immediate(), block: { (t) -> Any? in
+            XCTFail("Success block should not be triggered")
+            
+            return nil
         }, cancellationToken: cts.token)
+        
         XCTAssertTrue(task.isCancelled)
     }
     
     func testBasicContinueWithError() {
         let error = NSError.init(domain: "OSS-SWIFT-SDK", code: 22, userInfo: nil)
-        OSSTask<AnyObject>.init(error: error).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(error: error).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error, "Task should have failed.");
             let finalError = t.error! as NSError
             XCTAssertEqual(22, finalError.code);
@@ -101,12 +103,12 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testBasicContinueWithToken() {
         let cts = OSSCancellationTokenSource()
         var task = OSSTask<AnyObject>.init(delay: 100)
-        task = task.continue(with: OSSExecutor.immediate(),
-                      block: { (t) -> Any? in
-                        XCTFail("Continuation block should not be triggered");
-                        
-                        return nil;
+        task = task.continueWith(executor: OSSExecutor.immediate(), block: { (t) -> Any? in
+            XCTFail("Continuation block should not be triggered")
+            
+            return nil
         }, cancellationToken: cts.token)
+        
         cts.cancel()
         task.waitUntilFinished()
         
@@ -117,12 +119,10 @@ class OSSTaskTests: OSSSwiftDemoTests {
         let cts = OSSCancellationTokenSource()
         var task = OSSTask<AnyObject>.init(result: nil)
         cts.cancel()
-        task = task.continue(with: OSSExecutor.immediate(),
-                             block: { (t) -> Any? in
-                        XCTFail("Continuation block should not be triggered");
-                        
-                        return nil;
-                                
+        task = task.continueWith(executor: OSSExecutor.immediate(), block: { (t) -> Any? in
+            XCTFail("Continuation block should not be triggered")
+            
+            return nil
         }, cancellationToken: cts.token)
         
         XCTAssertTrue(task.isCancelled)
@@ -130,13 +130,13 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testFinishLaterWithSuccess() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertEqual("bar", t.result as! String)
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setResult("bar" as AnyObject)
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(result: "bar" as AnyObject)
             
             return nil
         })
@@ -146,7 +146,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testFinishLaterWithError() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(23, error.code)
@@ -154,8 +154,8 @@ class OSSTaskTests: OSSSwiftDemoTests {
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setError(NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(error: NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
             
             return nil
         })
@@ -165,17 +165,17 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testTransformConstantToConstant() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertEqual("foo", t.result as! String)
             
             return "bar"
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertEqual("bar", t.result as! String)
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setResult("foo" as AnyObject)
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(result: "foo" as AnyObject)
             
             return nil
         })
@@ -185,20 +185,20 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testTransformErrorToConstant() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             
             let error = t.error! as NSError
             XCTAssertEqual(23, error.code)
             
             return "bar"
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertEqual("bar", t.result as! String)
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setError(NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(error: NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
             
             return nil
         })
@@ -208,17 +208,17 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testReturnSuccessfulTaskFromContinuation() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertEqual("foo", t.result as! String)
             
             return OSSTask<AnyObject>.init(result: "bar" as AnyObject)
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertEqual("bar", t.result as! String)
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setResult("foo" as Any as AnyObject)
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(result: "foo" as Any as AnyObject)
             
             return nil
         })
@@ -228,19 +228,19 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testReturnSuccessfulTaskFromContinuationAfterError() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let finalError = t.error! as NSError
             XCTAssertEqual(23, finalError.code)
             
             return OSSTask<AnyObject>.init(result: "bar" as AnyObject)
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertEqual("bar", t.result as! String)
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setError(NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(error: NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
             
             return nil
         })
@@ -250,12 +250,12 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testReturnErrorTaskFromContinuation() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertEqual("foo", t.result as! String)
             let error = NSError.init(domain: "OSS-SWIFT-SDK", code: 24, userInfo: nil)
             
             return OSSTask<AnyObject>.init(error: error)
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(24, error.code)
@@ -263,8 +263,8 @@ class OSSTaskTests: OSSSwiftDemoTests {
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setResult("foo" as AnyObject)
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(result: "foo" as AnyObject)
             
             return nil
         })
@@ -274,12 +274,12 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testReturnErrorTaskFromContinuationAfterError() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = tcs.task.continue({ (t) -> Any? in
+        let task = tcs.task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = NSError.init(domain: "OSS-SWIFT-SDK", code: 24, userInfo: nil)
             
             return OSSTask<AnyObject>.init(error: error)
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(24, error.code)
@@ -287,8 +287,8 @@ class OSSTaskTests: OSSSwiftDemoTests {
             return nil
         })
         
-        OSSTask<AnyObject>.init(delay: 0).continue({ (t) -> Any? in
-            tcs.setError(NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
+        OSSTask<AnyObject>.init(delay: 0).continueWith(block: { (t) -> Any? in
+            tcs.set(error: NSError.init(domain: "OSS-SWIFT-SDK", code: 23, userInfo: nil))
             
             return nil
         })
@@ -298,13 +298,15 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testPassOnError() {
         let orignalError = NSError.init(domain: "OSS-SWIFT-SDK", code: 30, userInfo: nil)
-        OSSTask<AnyObject>.init(error: orignalError).continue(successBlock: { (t) -> Any? in
+        OSSTask<AnyObject>.init(error: orignalError).continueOnSuccessWith(block: { (t) -> Any? in
             XCTFail("This callback should be skipped.")
+            
             return nil
-        }).continue(successBlock: { (t) -> Any? in
+        }).continueOnSuccessWith(block: { (t) -> Any? in
             XCTFail("This callback should be skipped.")
+            
             return nil
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(30, error.code)
@@ -312,16 +314,16 @@ class OSSTaskTests: OSSSwiftDemoTests {
             let otherError = NSError.init(domain: "OSS-SWIFT-SDK", code: 31, userInfo: nil)
             
             return OSSTask<AnyObject>.init(error: otherError)
-        }).continue(successBlock: { (t) -> Any? in
+        }).continueOnSuccessWith(block: { (t) -> Any? in
             XCTFail("This callback should be skipped.")
             return nil
-        }).continue({ (t) -> Any? in
+        }).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(31, error.code)
             
             return OSSTask<AnyObject>.init(result: "okay" as AnyObject)
-        }).continue(successBlock: { (t) -> Any? in
+        }).continueOnSuccessWith(block: { (t) -> Any? in
             XCTAssertEqual("okay", t.result as! String)
             return nil
         }).waitUntilFinished()
@@ -329,7 +331,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testCancellation() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        let task = OSSTask<AnyObject>.init(delay: 100).continue({ (t) -> Any? in
+        let task = OSSTask<AnyObject>.init(delay: 100).continueWith(block: { (t) -> Any? in
             return tcs.task
             
             return nil
@@ -343,13 +345,13 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTaskForCompletionOfAllTasksSuccess() {
         var tasks: [OSSTask<AnyObject>] = [] as! [OSSTask<AnyObject>]
         for index in 0...19 {
-            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continue({ (t) -> Any? in
+            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continueWith(block: { (t) -> Any? in
                 return index
             })
             tasks.append(task)
         }
         
-        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             XCTAssertFalse(t.isCancelled)
             for index in 0...19 {
@@ -363,7 +365,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTaskForCompletionOfAllTasksOneError() {
         var tasks: [OSSTask<AnyObject>] = [] as! [OSSTask<AnyObject>]
         for index in 0...19 {
-            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continue({ (t) -> Any? in
+            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continueWith(block: { (t) -> Any? in
                 if index == 10 {
                     let error = NSError.init(domain: "OSS-SWIFT-SDK", code: 35, userInfo: nil)
                     return OSSTask<AnyObject>.init(error: error)
@@ -373,7 +375,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
             tasks.append(task)
         }
         
-        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             XCTAssertFalse(t.isCancelled)
             let error = t.error! as NSError
@@ -395,7 +397,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTaskForCompletionOfAllTasksTwoErrors() {
         var tasks: [OSSTask<AnyObject>] = [] as! [OSSTask<AnyObject>]
         for index in 0...19 {
-            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continue({ (t) -> Any? in
+            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continueWith(block: { (t) -> Any? in
                 if index == 10 || index == 11 {
                     let error = NSError.init(domain: "OSS-SWIFT-SDK", code: 35, userInfo: nil)
                     return OSSTask<AnyObject>.init(error: error)
@@ -405,7 +407,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
             tasks.append(task)
         }
         
-        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             XCTAssertFalse(t.isCancelled)
             let error = t.error! as NSError
@@ -433,7 +435,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTaskForCompletionOfAllTasksCancelled() {
         var tasks: [OSSTask<AnyObject>] = [] as! [OSSTask<AnyObject>]
         for index in 0...19 {
-            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continue({ (t) -> Any? in
+            let task = OSSTask<AnyObject>.init(delay: Int32(arc4random() % 100)).continueWith(block: { (t) -> Any? in
                 if index == 10 {
                     return OSSTask<AnyObject>.cancelled()
                 }
@@ -442,7 +444,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
             tasks.append(task)
         }
         
-        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(forCompletionOfAllTasks: tasks).continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             XCTAssertTrue(t.isCancelled)
             
@@ -471,13 +473,13 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTaskForCompletionOfAllTasksWithResultsSuccess() {
         var tasks: [OSSTask<AnyObject>] = [] as! [OSSTask<AnyObject>]
         for index in 0...19 {
-            let task = OSSTask<AnyObject>.init(delay: Int32(index * 10)).continue({ (t) -> Any? in
+            let task = OSSTask<AnyObject>.init(delay: Int32(index * 10)).continueWith(block: { (t) -> Any? in
                 
                 return (index + 1)
             })
             tasks.append(task)
         }
-        OSSTask<AnyObject>.init(forCompletionOfAllTasksWithResults: tasks).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(forCompletionOfAllTasksWithResults: tasks).continueWith(block: { (t) -> Any? in
             XCTAssertFalse(t.isCancelled)
             XCTAssertFalse(t.isFaulted)
             
@@ -613,7 +615,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     }
     
     func testWaitUntilFinished() {
-        let task = OSSTask<AnyObject>.init(delay: 50).continue({ (t) -> Any? in
+        let task = OSSTask<AnyObject>.init(delay: 50).continueWith(block: { (t) -> Any? in
             return "foo"
         })
         task.waitUntilFinished()
@@ -671,11 +673,11 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testReturnTaskFromContinuationWithCancellation() {
         let cts = OSSCancellationTokenSource()
         let expectation = self.expectation(description: "task")
-        OSSTask<AnyObject>.init(delay: 1).continue({ (t) -> Any? in
+        OSSTask<AnyObject>.init(delay: 1).continueWith(block: { (t) -> Any? in
             cts.cancel()
             
             return OSSTask<AnyObject>.init(delay: 10)
-        }, cancellationToken: cts.token).continue({ (t) -> Any? in
+        }, cancellationToken: cts.token).continueWith(block: { (t) -> Any? in
             XCTAssertTrue(t.isCancelled);
             expectation.fulfill()
             
@@ -687,18 +689,15 @@ class OSSTaskTests: OSSSwiftDemoTests {
     
     func testSetResult() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        tcs.setResult("a" as Any as AnyObject)
-        XCTAssertThrowsError(tcs.setResult("b" as AnyObject), NSExceptionName.internalInconsistencyException.rawValue) { (e) in
-            XCTAssertNotNil(e)
-        }
+        tcs.set(result: "a" as Any as AnyObject)
         XCTAssertTrue(tcs.task.isCompleted)
         XCTAssertEqual(tcs.task.result as! String, "a")
     }
     
     func testTrySetResult() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
-        tcs.trySetResult("a" as Any as AnyObject)
-        tcs.trySetResult("b" as Any as AnyObject)
+        tcs.trySet(result: "a" as Any as AnyObject)
+        tcs.trySet(result: "b" as Any as AnyObject)
         
         XCTAssertTrue(tcs.task.isCompleted)
         XCTAssertEqual(tcs.task.result as! String, "a")
@@ -707,10 +706,8 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testSetError() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
         let error = NSError.init(domain: "TestDomain", code: 100500, userInfo: nil)
-        tcs.setError(error)
-        XCTAssertThrowsError(tcs.setError(error), NSExceptionName.internalInconsistencyException.rawValue) { (e) in
-            XCTAssertNotNil(e)
-        }
+        tcs.set(error: error)
+        
         XCTAssertTrue(tcs.task.isCompleted)
         XCTAssertTrue(tcs.task.isFaulted)
         XCTAssertEqual(tcs.task.error! as NSError, error)
@@ -719,43 +716,18 @@ class OSSTaskTests: OSSSwiftDemoTests {
     func testTrySetError() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
         let error = NSError.init(domain: "TestDomain", code: 100500, userInfo: nil)
-        tcs.trySetError(error)
-        tcs.trySetError(error)
+        tcs.trySet(error: error)
+        tcs.trySet(error: error)
         
         XCTAssertTrue(tcs.task.isCompleted)
         XCTAssertTrue(tcs.task.isFaulted)
         XCTAssertEqual(tcs.task.error! as NSError, error)
     }
     
-    func testSetException() {
-        let tcs = OSSTaskCompletionSource<AnyObject>()
-        let exception = NSException.init(name: NSExceptionName(rawValue: "testExceptionName"), reason: "testExceptionReason", userInfo: nil)
-        tcs.setException(exception)
-        XCTAssertThrowsError(tcs.setException(exception), NSExceptionName.internalInconsistencyException.rawValue) { (e) in
-            XCTAssertNotNil(e)
-        }
-        XCTAssertTrue(tcs.task.isCompleted)
-        XCTAssertTrue(tcs.task.isFaulted)
-        XCTAssertEqual(tcs.task.exception, exception)
-    }
-    
-    func testTrySetException() {
-        let tcs = OSSTaskCompletionSource<AnyObject>()
-        let exception = NSException.init(name: NSExceptionName(rawValue: "testExceptionName"), reason: "testExceptionReason", userInfo: nil)
-        tcs.trySetException(exception)
-        tcs.trySetException(exception)
-        
-        XCTAssertTrue(tcs.task.isCompleted)
-        XCTAssertTrue(tcs.task.isFaulted)
-        XCTAssertEqual(tcs.task.exception, exception)
-    }
-    
     func testSetCancelled() {
         let tcs = OSSTaskCompletionSource<AnyObject>()
         tcs.cancel()
-        XCTAssertThrowsError(tcs.cancel(), NSExceptionName.internalInconsistencyException.rawValue) { (e) in
-            XCTAssertNotNil(e)
-        }
+        
         XCTAssertTrue(tcs.task.isCompleted)
         XCTAssertTrue(tcs.task.isCancelled)
     }
@@ -770,7 +742,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     }
     
     func testMultipleWaitUntilFinished() {
-        let task = OSSTask<AnyObject>.init(delay: 50).continue({ (t) -> Any? in
+        let task = OSSTask<AnyObject>.init(delay: 50).continueWith(block: { (t) -> Any? in
             return "foo"
         })
         task.waitUntilFinished()
@@ -785,7 +757,7 @@ class OSSTaskTests: OSSSwiftDemoTests {
     }
     
     func testMultipleThreadsWaitUntilFinished() {
-        let task = OSSTask<AnyObject>.init(delay: 500).continue({ (t) -> Any? in
+        let task = OSSTask<AnyObject>.init(delay: 500).continueWith(block: { (t) -> Any? in
             return "foo"
         })
         

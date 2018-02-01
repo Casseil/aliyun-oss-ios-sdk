@@ -35,7 +35,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
             request.uploadingData = try! NSData.init(contentsOfFile: filePath) as Data
             
             let task = client.putObject(request)
-            task.continue({ (t) -> Any? in
+            task.continueWith(block: { (t) -> Any? in
                 XCTAssertNil(t.error)
                 return nil
             }).waitUntilFinished()
@@ -56,7 +56,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -77,7 +77,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         var task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
         }).waitUntilFinished()
         
@@ -85,7 +85,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         headReq.bucketName = OSS_BUCKET_PRIVATE
         headReq.objectKey = objectKey
         task = client.headObject(headReq)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.result)
             let result = t.result as! OSSHeadObjectResult
             let contentType = result.objectMeta[OSS_CONTENT_TYPE] as! String
@@ -108,7 +108,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.contentType = ""
         
         var task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
         }).waitUntilFinished()
         
@@ -116,7 +116,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         headReq.bucketName = OSS_BUCKET_PRIVATE
         headReq.objectKey = request.objectKey
         task = client.headObject(headReq)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.result)
             let result = t.result as! OSSHeadObjectResult
             XCTAssertNotNil(result.objectMeta[OSS_CONTENT_TYPE])
@@ -143,7 +143,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
                                  "callbackBody": "test"]
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -156,7 +156,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.isAuthenticationRequired = false
         
         var task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             let error: NSError = t.error! as NSError
             XCTAssertNotNil(error)
             XCTAssertEqual(-403, error.code)
@@ -169,7 +169,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         putACLReq.bucketName = request.bucketName
         
         task = client.putObjectACL(putACLReq)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error);
             return nil
         }).waitUntilFinished()
@@ -180,7 +180,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         otherReq.isAuthenticationRequired = false
         
         task = client.getObject(otherReq)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -195,7 +195,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -207,7 +207,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.objectName = OSS_IMAGE_KEY
         
         let task = client.getObjectACL(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             if (t.result != nil)
             {
@@ -229,7 +229,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -247,7 +247,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -265,7 +265,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -281,7 +281,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             let result = t.result as! OSSGetObjectResult
             XCTAssertEqual(206, result.httpResponseCode)
@@ -307,7 +307,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -323,7 +323,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -341,7 +341,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.downloadToFileURL = URL.init(fileURLWithPath: localFilePath)
         
         var task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -356,7 +356,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.downloadToFileURL = URL.init(fileURLWithPath: localFilePath)
         
         task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             let result = t.result as! OSSGetObjectResult
             let contentLength = result.objectMeta[OSS_CONTENT_LENGTH]
@@ -372,7 +372,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.objectKey = OSS_IMAGE_KEY
         
         let task = client.headObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -393,7 +393,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -403,7 +403,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         otherRequest.objectKey = "putanddelete"
         
         let otherTask = client.deleteObject(otherRequest)
-        otherTask.continue({ (t) -> Any? in
+        otherTask.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -422,7 +422,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.quiet = false
         
         let task = client.deleteMultipleObjects(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -433,7 +433,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         let request = OSSGetServiceRequest()
         request.prefix = "huaixu"
         let task = client.getService(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -446,7 +446,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         request.objectKey = fileNames[2]
         request.sourceCopyFrom = "/" + OSS_BUCKET_PRIVATE + "/" + fileNames[2]
         let task = client.copyObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -462,7 +462,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         var presignedURL: String? = nil
         let tcs = OSSTaskCompletionSource<AnyObject>()
         let task = client.presignConstrainURL(withBucketName: OSS_BUCKET_PRIVATE, withObjectKey: fileNames[4], withExpirationInterval: 1)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             presignedURL = t.result as? String
             
@@ -472,7 +472,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         DispatchQueue.global().asyncAfter(deadline: .now()+3) {
             let data = NSData.init(contentsOf: URL.init(string: presignedURL!)!)
             XCTAssertNil(data)
-            tcs.setResult(nil)
+            tcs.set(result: nil)
         }
         tcs.task.waitUntilFinished()
     }
@@ -482,7 +482,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
                                               withObjectKey: fileNames[4],
                                               withExpirationInterval: 1,
                                               withParameters: ["x-oss-process": "image/resize,w_50"])
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -492,7 +492,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
     func testAPI_presignConstrainURL() {
         let task = client.presignPublicURL(withBucketName: OSS_BUCKET_PRIVATE,
                                            withObjectKey: fileNames[1])
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -503,7 +503,7 @@ class OSSNormalObjectTests: OSSSwiftDemoTests {
         let task = client.presignPublicURL(withBucketName: OSS_BUCKET_PRIVATE,
                                            withObjectKey: fileNames[1],
                                            withParameters: ["x-oss-process": "image/resize,w_50"])
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil

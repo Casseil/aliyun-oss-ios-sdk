@@ -39,7 +39,7 @@ class OSSCheckMd5Tests: OSSSwiftDemoTests {
         request.contentMd5 = OSSUtil.base64Md5(for: request.uploadingData)
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -62,7 +62,7 @@ class OSSCheckMd5Tests: OSSSwiftDemoTests {
         request.contentMd5 = OSSUtil.base64Md5(forFileURL: fileURL)
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             return nil
         }).waitUntilFinished()
@@ -85,7 +85,7 @@ class OSSCheckMd5Tests: OSSSwiftDemoTests {
         request.contentMd5 = "invliadmd5valuetotest"
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             return nil
         }).waitUntilFinished()

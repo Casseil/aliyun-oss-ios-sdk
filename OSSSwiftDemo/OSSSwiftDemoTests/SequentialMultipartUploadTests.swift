@@ -38,7 +38,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         let task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil;
@@ -56,7 +56,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         let task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error);
             
             return nil
@@ -78,7 +78,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         let task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(error.code, OSSClientErrorCODE.codeTaskCancelled.rawValue)
@@ -102,7 +102,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         let task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error);
             let error = t.error! as NSError
             XCTAssertEqual(error.code, OSSClientErrorCODE.codeTaskCancelled.rawValue)
@@ -129,7 +129,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         var task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(error.code, OSSClientErrorCODE.codeTaskCancelled.rawValue)
@@ -150,7 +150,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -175,7 +175,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         var task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(error.code, OSSClientErrorCODE.codeTaskCancelled.rawValue)
@@ -196,7 +196,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -221,7 +221,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         var task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(error.code, OSSClientErrorCODE.codeTaskCancelled.rawValue)
@@ -242,7 +242,7 @@ class SequentialMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         task = client.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil

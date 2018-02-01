@@ -141,10 +141,11 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
             print("bytesWritten:\(bytesWritten),totalBytesWritten:\(totalBytesWritten),totalBytesExpectedToWrite:\(totalBytesExpectedToWrite)");
         };
         let task: OSSTask = mClient.getObject(getObjectReq);
-        task.continue({(t) -> OSSTask<AnyObject>? in
+        task.continueWith { (t) -> Any? in
             self.showResult(task: t)
+            
             return nil
-        })
+        }
         task.waitUntilFinished()
         
         print("Error:\(String(describing: task.error))")
@@ -159,10 +160,11 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
             print("bytesWritten:\(bytesWritten),totalBytesWritten:\(totalBytesWritten),totalBytesExpectedToWrite:\(totalBytesExpectedToWrite)");
         };
         let task: OSSTask = mClient.getObject(getObjectReq);
-        task.continue({(t) -> OSSTask<AnyObject>? in
+        task.continueWith { (t) -> Any? in
             self.showResult(task: t)
+            
             return nil
-        })
+        }
         task.waitUntilFinished()
         
         print("Error:\(String(describing: task.error))")
@@ -178,7 +180,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
             let task = session.dataTask(with: url, completionHandler: { (data, response, error) -> Void in
                 
                 //Convert Data to Jsons
-                tcs.setResult(data as AnyObject)
+                tcs.set(result: data as AnyObject)
             })
             task.resume()
             tcs.task.waitUntilFinished()
@@ -217,10 +219,11 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.objectKey = objectKeyTF.text!
     
         let task: OSSTask = mClient.headObject(request)
-        task.continue({(task) -> OSSTask<AnyObject>? in
-            self.showResult(task: task)
+        task.continueWith { (t) -> Any? in
+            self.showResult(task: t)
+            
             return nil
-        })
+        }
         task.waitUntilFinished()
     }
     
@@ -252,15 +255,16 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.bucketName = OSS_BUCKET_PRIVATE
         
         let task = mClient.getBucket(request)
-        task.continue( { (t) -> Any? in
-            if let result = t.result as? OSSGetBucketResult {
-                self.showResult(task: OSSTask(result: result.contents as AnyObject))
-            }else
-            {
+        task.continueWith { (t) -> Any? in
+            if (t.result != nil) {
+                let result = t.result as? OSSGetBucketResult
+                self.showResult(task: OSSTask.init(result: result?.contents as AnyObject))
+            } else {
                 self.showResult(task: t)
             }
+            
             return nil
-        })
+        }
     }
     
     func getBucketACL() -> Void {
@@ -268,7 +272,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.bucketName = OSS_BUCKET_PRIVATE
         
         let task = mClient.getBucketACL(request)
-        task.continue( { (t) -> Any? in
+        task.continueWith { (t) -> Any? in
             if let result = t.result as? OSSGetBucketACLResult {
                 self.showResult(task: OSSTask(result: result.aclGranted as AnyObject))
             }else
@@ -276,7 +280,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
                 self.showResult(task: t)
             }
             return nil
-        })
+        }
     }
     
     func createBucket() -> Void {
@@ -284,8 +288,9 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.bucketName = "com-dhc-test"
         
         let task = mClient.createBucket(request)
-        task.continue( { (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
+            
             return nil
         })
     }
@@ -295,10 +300,11 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.bucketName = "com-dhc-test"
         
         let task = mClient.deleteBucket(request)
-        task.continue( { (t) -> Any? in
+        task.continueWith { (t) -> Any? in
             self.showResult(task: t)
+            
             return nil
-        })
+        }
     }
     
     @IBAction func uploadButtonClicked(_ sender: UIButton) {
@@ -332,8 +338,10 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         let provider = OSSAuthCredentialProvider(authServerUrl: OSS_STSTOKEN_URL)
         let client = OSSClient(endpoint: OSS_ENDPOINT, credentialProvider: provider)
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
+            
+            return nil
         }).waitUntilFinished()
     }
     
@@ -342,7 +350,8 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.uploadingFileURL = Bundle.main.url(forResource: "wangwang", withExtension: "zip")!
         request.bucketName = OSS_BUCKET_PRIVATE
         request.objectKey = "wangwang(swift).zip"
-        request.partSize = 102400;
+        request.partSize = 102400
+        request.crcFlag = .open
         request.uploadProgress = { (bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) -> Void in
             print("bytesSent:\(bytesSent),totalBytesSent:\(totalBytesSent),totalBytesExpectedToSend:\(totalBytesExpectedToSend)");
         };
@@ -350,12 +359,15 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         let provider = OSSAuthCredentialProvider(authServerUrl: OSS_STSTOKEN_URL)
         let client = OSSClient(endpoint: OSS_ENDPOINT, credentialProvider: provider)
         let task = client.multipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
+            
+            return nil
         }).waitUntilFinished()
     }
     
     func resumableUpload() -> Void {
+        /*
         var request = OSSResumableUploadRequest()
         request.uploadingFileURL = Bundle.main.url(forResource: "wangwang", withExtension: "zip")!
         request.bucketName = OSS_BUCKET_PRIVATE
@@ -364,6 +376,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         let cacheDir =  NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.cachesDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first
         request.recordDirectoryPath = cacheDir!
         request.partSize = 102400;
+        request.crcFlag = .open
         request.uploadProgress = { (bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) -> Void in
             print("bytesSent:\(bytesSent),totalBytesSent:\(totalBytesSent),totalBytesExpectedToSend:\(totalBytesExpectedToSend)");
             if totalBytesSent > (totalBytesExpectedToSend / 2) {
@@ -372,16 +385,14 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         }
         
         var task = mClient.resumableUpload(request)
-        task.continue({ (t) -> Any? in
-            print("Error: \(String(describing: t.error))")
-            return nil
-        }).waitUntilFinished()
+        task.waitUntilFinished()
         
         request = OSSResumableUploadRequest()
         request.uploadingFileURL = Bundle.main.url(forResource: "wangwang", withExtension: "zip")!
         request.bucketName = OSS_BUCKET_PRIVATE
         request.objectKey = "wangwang(swift).zip"
         request.partSize = 102400;
+        request.crcFlag = .open
         request.deleteUploadIdOnCancelling = false;
         request.recordDirectoryPath = cacheDir!
         request.uploadProgress = { (bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) -> Void in
@@ -389,10 +400,19 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         }
         
         task = mClient.resumableUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
+            
             return nil
         }).waitUntilFinished()
+        */
+        let filePath = Bundle.main.path(forResource: "wangwang", ofType: "zip")
+        let handler = mClient.resumableUploadFile(filePath!, withContentType: "", withObjectMeta: ["": ""], toBucketName: OSS_BUCKET_PRIVATE, toObjectKey: OSS_RESUMABLE_UPLOADKEY, onCompleted: { (succeed, error) in
+            print("\(error)")
+        }) { (progress) in
+            print("\(progress)")
+        }
+        print("ssssssss")
     }
     
     func sequentialMultipartUpload() {
@@ -401,12 +421,12 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.objectKey = "sequential-swift-multipart";
         request.uploadingFileURL = Bundle.main.url(forResource: "wangwang", withExtension: "zip")!
         request.deleteUploadIdOnCancelling = false
-        request.crcFlag = OSSRequestCRCFlag.open
+        request.crcFlag = .open
         let filePath = Bundle.main.path(forResource: "wangwang", ofType: "zip")
         request.contentSHA1 = OSSUtil.sha1(withFilePath: filePath)
         
         let task = mClient.sequentialMultipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
             
             return nil
@@ -425,8 +445,10 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         };
         
         let task = mClient.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
+            
+            return nil
         }).waitUntilFinished()
     }
     
@@ -436,7 +458,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.objectName = OSS_IMAGE_KEY
         
         let task = mClient.getObjectACL(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
             
             return nil
@@ -451,7 +473,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
         request.encodingType = "url"
         
         let task = mClient.deleteMultipleObjects(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             self.showResult(task: t)
             
             return nil
@@ -471,7 +493,7 @@ class OSSRootViewController: UIViewController, URLSessionDelegate, URLSessionDat
                                 "callbackBody": "test"]
         
         let task = pClient.triggerCallBack(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             if (t.result != nil) {
                 let result = t.result as! OSSCallBackResult;
                 self .ossAlert(title: "提示", message: result.serverReturnJsonString);

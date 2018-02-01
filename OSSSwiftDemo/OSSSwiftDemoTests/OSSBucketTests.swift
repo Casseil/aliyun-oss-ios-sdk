@@ -28,7 +28,7 @@ class OSSBucketTests: OSSSwiftDemoTests {
         request.xOssACL = "public-read-write"
         
         let task = client.createBucket(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -40,7 +40,7 @@ class OSSBucketTests: OSSSwiftDemoTests {
         request.bucketName = OSS_BUCKET_PRIVATE
         
         let task = client.getBucket(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -52,7 +52,7 @@ class OSSBucketTests: OSSSwiftDemoTests {
         request.bucketName = OSS_BUCKET_PRIVATE
         
         let task = client.getBucketACL(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             let result = t.result as! OSSGetBucketACLResult
             XCTAssertEqual("private", result.aclGranted)
@@ -66,7 +66,7 @@ class OSSBucketTests: OSSSwiftDemoTests {
         request.bucketName = "oss-testcase-bucket"
         
         let task = client.deleteBucket(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -79,7 +79,7 @@ class OSSBucketTests: OSSSwiftDemoTests {
         request.xOssACL = "public-read-write"
         
         let task = client.createBucket(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error as! NSError
             XCTAssertEqual(error.code, -400)

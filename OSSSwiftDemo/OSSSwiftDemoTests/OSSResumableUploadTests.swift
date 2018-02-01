@@ -34,7 +34,7 @@ class OSSResumableUploadTests: OSSSwiftDemoTests {
         }
         
         let task = client.resumableUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -57,7 +57,7 @@ class OSSResumableUploadTests: OSSSwiftDemoTests {
         }
         
         let task = client.resumableUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             
             return nil

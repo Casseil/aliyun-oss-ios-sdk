@@ -26,9 +26,11 @@ class OSSExecutorTests: XCTestCase {
         var task = OSSTask<AnyObject>.init(result: nil)
         let expectation = self.expectation(description: "test immediate executor")
         DispatchQueue.global().async {
-            task = task.continue(with: OSSExecutor.immediate(), with: { (t) -> Any? in
+            task = task.continueWith(executor: OSSExecutor.immediate(), block: { (t) -> Any? in
+                
                 return nil
             })
+            
             XCTAssertTrue(task.isCompleted)
             expectation.fulfill()
         }
@@ -48,9 +50,9 @@ class OSSExecutorTests: XCTestCase {
         
         let queueExecutor = OSSExecutor.init(dispatchQueue: testQueue)
         var task = OSSTask<AnyObject>.init(result: nil)
-        task = task.continue(with: queueExecutor, with: { (t) -> Any? in
+        task = task.continueWith(executor: queueExecutor, block: { (t) -> Any? in
             XCTAssertNotNil(DispatchQueue.getSpecific(key: testQueueKey), "callback should be called on specified queue")
-
+            
             return nil
         })
         task.waitUntilFinished()

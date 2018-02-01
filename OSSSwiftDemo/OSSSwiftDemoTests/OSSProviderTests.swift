@@ -32,7 +32,7 @@ class OSSProviderTests: XCTestCase {
         let session = URLSession.shared
         let task = session.dataTask(with: request) { (data, response, error) in
             XCTAssertNil(error)
-            tcs.setResult(data as AnyObject)
+            tcs.set(result: data as AnyObject)
         }
         task.resume()
         tcs.task.waitUntilFinished()
@@ -51,7 +51,7 @@ class OSSProviderTests: XCTestCase {
         request.objectKey = OSS_IMAGE_KEY
         
         let task = client.headObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil

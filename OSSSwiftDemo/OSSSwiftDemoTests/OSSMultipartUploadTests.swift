@@ -34,7 +34,7 @@ class OSSMultipartUploadTests: OSSSwiftDemoTests {
         }
         
         let task = client.multipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             
             return nil
@@ -52,7 +52,7 @@ class OSSMultipartUploadTests: OSSSwiftDemoTests {
         let task = client.multipartUploadInit(request)
         var uploadId: String? = nil
         
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             let result = t.result as! OSSInitMultipartUploadResult
             uploadId = result.uploadId
@@ -66,7 +66,7 @@ class OSSMultipartUploadTests: OSSSwiftDemoTests {
         otherRequest.uploadId = uploadId!
         
         let otherTask = client.abortMultipartUpload(otherRequest)
-        otherTask.continue({ (t) -> Any? in
+        otherTask.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             let result = t.result as! OSSAbortMultipartUploadResult
             
@@ -88,11 +88,11 @@ class OSSMultipartUploadTests: OSSSwiftDemoTests {
         }
         let tcs = OSSTaskCompletionSource<AnyObject>()
         let task = client.multipartUpload(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(OSSClientErrorCODE.codeTaskCancelled.rawValue, error.code)
-            tcs.setError(error)
+            tcs.set(error: error)
             
             return nil
         })

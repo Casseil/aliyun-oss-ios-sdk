@@ -46,8 +46,9 @@ class OSSCheckCRC64Tests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
+            
             return nil
         }).waitUntilFinished()
     }
@@ -60,7 +61,7 @@ class OSSCheckCRC64Tests: OSSSwiftDemoTests {
         
         var result: OSSAppendObjectResult? = nil
         var task = client.appendObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNil(t.error)
             result = t.result as? OSSAppendObjectResult
             return nil

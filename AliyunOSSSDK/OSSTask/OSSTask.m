@@ -197,7 +197,7 @@ NSString *const OSSTaskMultipleErrorsUserInfoKey = @"oss-errors";
 }
 
 
-+ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis {
++ (instancetype)taskWithDelay:(int)millis {
     OSSTaskCompletionSource *tcs = [OSSTaskCompletionSource taskCompletionSource];
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, millis * NSEC_PER_MSEC);
     dispatch_after(popTime, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
@@ -206,7 +206,7 @@ NSString *const OSSTaskMultipleErrorsUserInfoKey = @"oss-errors";
     return tcs.task;
 }
 
-+ (OSSTask<OSSVoid> *)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token {
++ (instancetype)taskWithDelay:(int)millis cancellationToken:(nullable OSSCancellationToken *)token {
     if (token.cancellationRequested) {
         return [OSSTask cancelledTask];
     }

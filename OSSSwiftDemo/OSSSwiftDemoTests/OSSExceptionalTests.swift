@@ -36,7 +36,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(OSSClientErrorCODE.codeInvalidArgument.rawValue, error.code);
@@ -55,7 +55,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(OSSClientErrorCODE.codeInvalidArgument.rawValue, error.code);
@@ -65,7 +65,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
     
     func testAPI_putObjectWithErrorOfInvalidBucketName() {
         let request = OSSPutObjectRequest()
-        let fileName = "swift"
+        let fileName = "oracle"
         let fileExtension = "pdf"
         request.bucketName = "oss-testcase-unexist-bucket"
         request.uploadingFileURL = Bundle.main.url(forResource: fileName, withExtension: fileExtension)!
@@ -77,7 +77,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = client.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(-404, error.code);
@@ -101,7 +101,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = wrongClient.putObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(OSSClientErrorCODE.codeSignFailed.rawValue, error.code)
@@ -121,7 +121,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         request.downloadToFileURL = URL.init(fileURLWithPath: localFilePath)
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(-404, error.code)
@@ -142,7 +142,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         request.downloadToFileURL = URL.init(fileURLWithPath: localFilePath)
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(-404, error.code)
@@ -161,7 +161,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(-403, error.code)
@@ -180,7 +180,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         }
         
         let task = client.getObject(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             let error = t.error! as NSError
             XCTAssertEqual(-416, error.code)
@@ -195,7 +195,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         request.encodingType = "url"
         
         let task = client.deleteMultipleObjects(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             
             return nil
@@ -208,7 +208,7 @@ class OSSExceptionalTests: OSSSwiftDemoTests {
         request.keys = ["file1k","file10k","file100k"];
         
         let task = client.deleteMultipleObjects(request)
-        task.continue({ (t) -> Any? in
+        task.continueWith(block: { (t) -> Any? in
             XCTAssertNotNil(t.error)
             
             return nil
